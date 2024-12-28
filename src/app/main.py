@@ -1,7 +1,7 @@
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
-from process import convert_to_grayscale, identify_shading_patterns  # Import processing functions
+from process import convert_to_grayscale, identify_shading_patterns
 import cv2
 
 app = Flask(__name__)
@@ -12,6 +12,30 @@ ORIGINAL_FOLDER = os.path.join(UPLOAD_FOLDER, 'original')
 PROCESSED_FOLDER = os.path.join(UPLOAD_FOLDER, 'processed')
 os.makedirs(ORIGINAL_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Utility function for processing a single image
+def process_file(filepath, filename):
+    grayscale = convert_to_grayscale(filepath)
+    shading = identify_shading_patterns(grayscale)
+
+    # Save processed images
+    grayscale_path = os.path.join(PROCESSED_FOLDER, f"grayscale_{filename}")
+    shading_path = os.path.join(PROCESSED_FOLDER, f"shading_{filename}")
+    cv2.imwrite(grayscale_path, grayscale)
+    cv2.imwrite(shading_path, shading)
+
+    return {
+        "original": filepath,
+        "grayscale": f"/static/{grayscale_path}",
+        "shading": f"/static/{shading_path}"
+    }
+
+# Serve static files (processed images)
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -29,19 +53,11 @@ def home():
 
         # Process the uploaded file
         try:
-            grayscale = convert_to_grayscale(filepath)
-            shading = identify_shading_patterns(grayscale)
-
-            # Save processed images
-            grayscale_path = os.path.join(PROCESSED_FOLDER, f"grayscale_{filename}")
-            shading_path = os.path.join(PROCESSED_FOLDER, f"shading_{filename}")
-            cv2.imwrite(grayscale_path, grayscale)
-            cv2.imwrite(shading_path, shading)
-
+            processed = process_file(filepath, filename)
             return f"""
                 <h1>File processed successfully!</h1>
-                <p>Grayscale Image: <a href="/{grayscale_path}" target="_blank">View</a></p>
-                <p>Shading Image: <a href="/{shading_path}" target="_blank">View</a></p>
+                <p>Grayscale Image: <a href="{processed['grayscale']}" target="_blank">View</a></p>
+                <p>Shading Image: <a href="{processed['shading']}" target="_blank">View</a></p>
                 <a href="/">Upload another file</a>
             """
         except Exception as e:
@@ -64,68 +80,18 @@ def home():
         </body>
         </html>
     """
-@app.route('/process-image', methods=['POST'])
-def process_image():
-    if 'file' not in request.files:
-        return jsonify(error="No file provided"), 400
-
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify(error="No file selected"), 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(ORIGINAL_FOLDER, filename)
-    file.save(filepath)
-
-    # Process the uploaded file
-    try:
-        grayscale = convert_to_grayscale(filepath)
-        shading = identify_shading_patterns(grayscale)
-
-        # Save processed images
-        grayscale_path = os.path.join(PROCESSED_FOLDER, f"grayscale_{filename}")
-        shading_path = os.path.join(PROCESSED_FOLDER, f"shading_{filename}")
-        cv2.imwrite(grayscale_path, grayscale)
-        cv2.imwrite(shading_path, shading)
-
-        return jsonify(
-            message="File processed successfully",
-            grayscale_path=grayscale_path,
-            shading_path=shading_path
-        )
-    except Exception as e:
-        return jsonify(error=str(e)), 500
 
 @app.route('/process-images', methods=['GET'])
 def process_images():
-    # List all files in the original folder
     files = os.listdir(ORIGINAL_FOLDER)
     processed_files = []
 
     for file in files:
         file_path = os.path.join(ORIGINAL_FOLDER, file)
-
-        if os.path.isfile(file_path):  # Ensure it's a file
+        if os.path.isfile(file_path):
             filename = secure_filename(file)
-            
-            # Process the file
             try:
-                grayscale = convert_to_grayscale(file_path)
-                shading = identify_shading_patterns(grayscale)
-
-                # Save the processed files
-                grayscale_path = os.path.join(PROCESSED_FOLDER, f"grayscale_{filename}")
-                shading_path = os.path.join(PROCESSED_FOLDER, f"shading_{filename}")
-                cv2.imwrite(grayscale_path, grayscale)
-                cv2.imwrite(shading_path, shading)
-
-                # Add paths to response
-                processed_files.append({
-                    "original": file_path,
-                    "grayscale": grayscale_path,
-                    "shading": shading_path
-                })
+                processed_files.append(process_file(file_path, filename))
             except Exception as e:
                 return jsonify(error=f"Error processing {file}: {str(e)}"), 500
 
