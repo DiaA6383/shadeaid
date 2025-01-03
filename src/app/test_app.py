@@ -1,6 +1,7 @@
+# filepath: /Users/alejandrodiaz/Documents/GitHub/shadeaid/src/app/test_app.py
 import os
 import pytest
-from app import app
+from main import app
 
 @pytest.fixture
 def client():
@@ -10,7 +11,7 @@ def client():
 
 def test_upload_image(client):
     # Path to a sample image file
-    image_path = 'tests/sample_image.jpg'
+    image_path = '../../tests/sample_image.jpg'
     with open(image_path, 'rb') as img:
         data = {
             'file': (img, 'sample_image.jpg')
