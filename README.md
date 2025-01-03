@@ -18,13 +18,13 @@ small project to help with shading
 - [ ] Add placeholder logic in `process.py` for converting an image to grayscale and identifying shading patterns.
 
 ### 1.3 Install Dependencies
-- [ ] Add Python libraries to `requirements.txt`:
+- [✅] Add Python libraries to `requirements.txt`:
   - Flask
   - OpenCV (`opencv-python`)
   - Pillow
   - NumPy
   - Scikit-Image
-- [ ] Install dependencies locally:
+- [✅] Install dependencies locally:
   ```bash
   pip install -r requirements.txt
   ```

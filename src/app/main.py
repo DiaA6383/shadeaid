@@ -14,7 +14,6 @@ os.makedirs(ORIGINAL_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
 def clear_folder(folder_path):
-    """Delete all files in the given folder."""
     for file in os.listdir(folder_path):
         file_path = os.path.join(folder_path, file)
         if os.path.isfile(file_path):
