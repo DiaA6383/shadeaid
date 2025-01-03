@@ -10,7 +10,7 @@ def client():
 
 def test_upload_image(client):
     # Path to a sample image file
-    image_path = '../../tests/sample_image.png'
+    image_path = 'src/tests/sample_image.png'
     with open(image_path, 'rb') as img:
         data = {
             'file': (img, 'sample_image.png')
