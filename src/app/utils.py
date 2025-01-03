@@ -1,4 +1,3 @@
-# filepath: /Users/alejandrodiaz/Documents/GitHub/shadeaid/src/app/utils.py
 import os
 import cv2
 from werkzeug.utils import secure_filename

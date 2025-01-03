@@ -1,4 +1,3 @@
-# filepath: /Users/alejandrodiaz/Documents/GitHub/shadeaid/src/app/test_app.py
 import os
 import pytest
 from main import app
@@ -11,10 +10,10 @@ def client():
 
 def test_upload_image(client):
     # Path to a sample image file
-    image_path = '../../tests/sample_image.jpg'
+    image_path = '../../tests/sample_image.png'
     with open(image_path, 'rb') as img:
         data = {
-            'file': (img, 'sample_image.jpg')
+            'file': (img, 'sample_image.png')
         }
         response = client.post('/', content_type='multipart/form-data', data=data)
         assert response.status_code == 200
